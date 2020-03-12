@@ -23,7 +23,7 @@ class State(val board: Board) {
 		newBoard.moveFunc()
 		val state = State(newBoard)
 		state.g = g + 1
-		state.h = newBoard.heuristicHamming
+		state.h = newBoard.heuristicManhattan
 		state.f = state.g + state.h
 		state.parent = this
 		return state

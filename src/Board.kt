@@ -3,10 +3,15 @@ const val EMPTY_TILE = 0
 
 class Board private constructor(private val board: ArrayList<MutableList<Int>>) {
 
-	private val emptyTile: EmptyTile = EmptyTile.findEmptyTile(board)
+	private val tiles = Tile.findAllTiles(board, tilesAmount)
+
+	private val emptyTile: Tile = tiles[EMPTY_TILE]!!
 
 	val heuristicHamming
-		get() = board.zip(solvedBoard.board).flatMap { it.first.zip(it.second) }.count { it.first != it.second }
+		get() = tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
+
+	val heuristicManhattan: Int
+		get() = tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
 
 	val canMoveEmptyTileUp
 		get() = emptyTile.y > 0
@@ -74,6 +79,7 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	companion object {
 
 		private var size = 0
+		private var tilesAmount = 0
 		private var solvedBoard = Board(ArrayList<MutableList<Int>>().apply {
 			add(mutableListOf(1, 2, 3))
 			add(mutableListOf(8, 0, 4))
@@ -82,6 +88,7 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 		fun setBoardsSize(size: Int) {
 			this.size = size
+			tilesAmount = size * size
 			//TODO: generate solved board
 		}
 

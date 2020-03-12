@@ -1,9 +1,9 @@
 import java.util.*
 
 const val INPUT =
-			"1 3 0\n" +
-			"8 6 4\n" +
-			"7 5 2\n"
+			"2 5 8\n" +
+			"7 0 3\n" +
+			"4 1 6\n"
 
 const val SIZE = 3
 
