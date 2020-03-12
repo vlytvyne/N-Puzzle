@@ -5,7 +5,7 @@ class State(val board: Board) {
 	var h = 0
 	var f = 0
 
-	var parent: State? = null
+	private var parent: State? = null
 
 	fun getNeighbourStates(): ArrayList<State> {
 		val states = ArrayList<State>()
@@ -24,8 +24,33 @@ class State(val board: Board) {
 		val state = State(newBoard)
 		state.g = g + 1
 		state.h = newBoard.heuristicHamming
-		state.f = g + h
+		state.f = state.g + state.h
 		state.parent = this
 		return state
+	}
+
+	override fun equals(other: Any?): Boolean {
+		if (other is State) {
+			return board == other.board
+		}
+		return false
+	}
+
+	fun print() {
+		println("g: $g, h: $h, f: $f")
+		board.print()
+	}
+
+	fun printTrace() {
+		var currentState: State? = this
+		val trace = arrayListOf<State>()
+
+		while (currentState != null) {
+			trace.add(currentState)
+			currentState = currentState.parent
+		}
+
+		trace.reverse()
+		trace.forEach { it.print() }
 	}
 }

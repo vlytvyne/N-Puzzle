@@ -1,9 +1,9 @@
 import java.util.*
 
 const val INPUT =
-			"1 2 3\n" +
+			"1 3 0\n" +
 			"8 6 4\n" +
-			"7 0 5\n"
+			"7 5 2\n"
 
 const val SIZE = 3
 
@@ -29,17 +29,21 @@ fun main() {
 		val currentState = openList.poll()
 
 		if (currentState.board.isSolved) {
-			pathIsFound()
+			pathIsFound(currentState)
+			break
 		}
 		expandState(currentState)
 		closedList.add(currentState)
 	}
+
 }
 
-fun pathIsFound() {
+fun pathIsFound(state: State) {
+	state.printTrace()
 	println("SOLVED")
 }
 
 fun expandState(state: State) {
-
+	val states = state.getNeighbourStates()
+	states.filter { !closedList.contains(it) }.forEach { openList.add(it) }
 }

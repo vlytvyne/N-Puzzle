@@ -64,6 +64,13 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	val isSolved
 		get() = board == solvedBoard.board
 
+	override fun equals(other: Any?): Boolean {
+		if (other is Board) {
+			return board == other.board
+		}
+		return false
+	}
+
 	companion object {
 
 		private var size = 0
