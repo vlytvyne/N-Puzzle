@@ -18,13 +18,13 @@ class Tile private constructor(var x: Int, var y: Int, val value: Int) {
 
 	companion object {
 
-		fun findAllTiles(board: List<List<Int>>, tilesAmount: Int): TileMap {
+		fun findAllTiles(board: List<List<Int>>): TileMap {
 			val tiles = TileMap()
 			var x = 0
 			var y = 0
 
-			while (y < SIZE) {
-				while (x < SIZE) {
+			while (y < board.size) {
+				while (x < board.size) {
 					val tileValue = board[y][x]
 					tiles[tileValue] = Tile(x, y, tileValue)
 					x++
@@ -32,6 +32,7 @@ class Tile private constructor(var x: Int, var y: Int, val value: Int) {
 				x = 0
 				y++
 			}
+			board.size
 			return tiles
 		}
 	}

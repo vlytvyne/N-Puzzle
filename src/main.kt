@@ -1,9 +1,9 @@
 import java.util.*
 
 const val INPUT =
-			"8 3 2\n" +
-			"7 5 0\n" +
-			"1 6 4\n"
+			"1 2 3\n" +
+			"8 0 4\n" +
+			"7 6 5\n"
 
 const val SIZE = 3
 
@@ -20,29 +20,30 @@ val closedList = arrayListOf<State>()
 
 fun main() {
 	Board.setBoardsSize(SIZE)
+	Board.setHeuristic(Heuristic.HAMMING)
 	val startBoard = Board.createBoard(INPUT)
+	solvePuzzle(startBoard)
+}
 
+fun solvePuzzle(startBoard: Board) {
 	val startState = State(startBoard)
 	openList.add(startState)
 
-//	while (openList.isNotEmpty()) {
-//		val currentState = openList.poll()
-//
-//		if (currentState.board.isSolved) {
-//			pathIsFound(currentState)
-//			break
-//		}
-//		expandState(currentState)
-//		closedList.add(currentState)
-//	}
+	while (openList.isNotEmpty()) {
+		val currentState = openList.poll()
 
-	println(startBoard.getLinearConflictsOnBoard())
-
+		if (currentState.board.isSolved) {
+			pathIsFound(currentState)
+			break
+		}
+		expandState(currentState)
+		closedList.add(currentState)
+	}
 }
 
 fun pathIsFound(state: State) {
-//	state.printTrace()
-//	println("SOLVED")
+	state.printTrace()
+	println("SOLVED")
 }
 
 fun expandState(state: State) {

@@ -1,60 +1,47 @@
-
 const val EMPTY_TILE = 0
 
 class Board private constructor(private val board: ArrayList<MutableList<Int>>) {
 
-	private val tiles = Tile.findAllTiles(board, tilesAmount)
+	private val tiles = Tile.findAllTiles(board)
 
 	private val emptyTile: Tile = tiles[EMPTY_TILE]!!
 
 	val isSolved
 		get() = board == solvedBoard.board
 
-	val heuristicHamming
-		get() = tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
+	val heuristicScore
+		get() = heuristicScoringFunc()
 
-	val heuristicManhattan
-		get() = tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
+	fun getHeuristicHammingScore() =
+		tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
 
-	val heuristicLinearConflict: Int
-		get() = heuristicManhattan + getLinearConflictsOnBoard() * 2
+	fun getHeuristicManhattanScore() =
+		tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
 
-	fun getLinearConflictsOnBoard() =
-		(0 until size).sumBy { countLinearConflictsInColumn(it) + countLinearConflictsInRow(it) }
+	fun getHeuristicLinearConflictScore() =
+		getHeuristicManhattanScore() + getLinearConflictsOnBoard() * 2
 
-	fun isTileInRightRowButWrongColumn(tile: Tile): Boolean {
+	private fun getLinearConflictsOnBoard() =
+		(0 until size).sumBy { countLinearConflictsInRow(it) + countLinearConflictsInColumn(it)}
+
+	private fun countLinearConflictsInRow(row: Int): Int {
+		val tilesInRightRowButWrongColumn = board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
+		return if (tilesInRightRowButWrongColumn >= 2) tilesInRightRowButWrongColumn - 1 else 0
+	}
+
+	private fun isTileInRightRowButWrongColumn(tile: Tile): Boolean {
 		val solvedTile = solvedBoard.tiles[tile.value]!!
-//		println(tile)
-//		println(solvedTile)
-//		println(solvedTile.y == tile.y && solvedTile.x != tile.x)
 		return solvedTile.y == tile.y && solvedTile.x != tile.x
 	}
 
-	fun countLinearConflictsInRow(row: Int): Int {
-		val tilesInRightRowButWrongColumn = board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
-		return if (tilesInRightRowButWrongColumn >= 2) {
-			tilesInRightRowButWrongColumn - 1
-		} else {
-			0
-		}
-//		return board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
-	}
-
-	fun isTileInRightColumnButWrongRow(tile: Tile): Boolean {
-		val solvedTile = solvedBoard.tiles[tile.value]!!
-//		println(tile)
-//		println(solvedTile)
-//		println(solvedTile.x == tile.x && solvedTile.y != tile.y)
-		return solvedTile.x == tile.x && solvedTile.y != tile.y
-	}
-
-	fun countLinearConflictsInColumn(column: Int): Int {
+	private fun countLinearConflictsInColumn(column: Int): Int {
 		val tilesInRightColumnButWrongRow = board.map { it[column] }.count { isTileInRightColumnButWrongRow(tiles[it]!!) }
-		return if (tilesInRightColumnButWrongRow >= 2) {
-			tilesInRightColumnButWrongRow - 1
-		} else {
-			0
-		}
+		return if (tilesInRightColumnButWrongRow >= 2) tilesInRightColumnButWrongRow - 1 else 0
+	}
+
+	private fun isTileInRightColumnButWrongRow(tile: Tile): Boolean {
+		val solvedTile = solvedBoard.tiles[tile.value]!!
+		return solvedTile.x == tile.x && solvedTile.y != tile.y
 	}
 
 	val canMoveEmptyTileUp
@@ -127,10 +114,16 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			add(mutableListOf(7, 6, 5))
 		})
 
+		var heuristicScoringFunc: Board.() -> Int = Board::getHeuristicHammingScore
+
 		fun setBoardsSize(size: Int) {
 			this.size = size
 			tilesAmount = size * size
 			//TODO: generate solved board
+		}
+
+		fun setHeuristic(heuristic: Heuristic) {
+			heuristicScoringFunc = heuristics[heuristic]!!
 		}
 
 		fun createBoard(input: String): Board {
@@ -140,4 +133,16 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			return Board(board)
 		}
 	}
+}
+
+private val heuristics = HashMap<Heuristic, Board.() -> Int>().apply {
+	put(Heuristic.HAMMING, Board::getHeuristicHammingScore)
+	put(Heuristic.MANHATTAN, Board::getHeuristicManhattanScore)
+	put(Heuristic.LINEAR_CONFLICT, Board::getHeuristicLinearConflictScore)
+}
+
+enum class Heuristic {
+	HAMMING,
+	MANHATTAN,
+	LINEAR_CONFLICT
 }
