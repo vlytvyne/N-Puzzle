@@ -7,11 +7,55 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 	private val emptyTile: Tile = tiles[EMPTY_TILE]!!
 
+	val isSolved
+		get() = board == solvedBoard.board
+
 	val heuristicHamming
 		get() = tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
 
-	val heuristicManhattan: Int
+	val heuristicManhattan
 		get() = tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
+
+	val heuristicLinearConflict: Int
+		get() = heuristicManhattan + getLinearConflictsOnBoard() * 2
+
+	fun getLinearConflictsOnBoard() =
+		(0 until size).sumBy { countLinearConflictsInColumn(it) + countLinearConflictsInRow(it) }
+
+	fun isTileInRightRowButWrongColumn(tile: Tile): Boolean {
+		val solvedTile = solvedBoard.tiles[tile.value]!!
+//		println(tile)
+//		println(solvedTile)
+//		println(solvedTile.y == tile.y && solvedTile.x != tile.x)
+		return solvedTile.y == tile.y && solvedTile.x != tile.x
+	}
+
+	fun countLinearConflictsInRow(row: Int): Int {
+		val tilesInRightRowButWrongColumn = board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
+		return if (tilesInRightRowButWrongColumn >= 2) {
+			tilesInRightRowButWrongColumn - 1
+		} else {
+			0
+		}
+//		return board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
+	}
+
+	fun isTileInRightColumnButWrongRow(tile: Tile): Boolean {
+		val solvedTile = solvedBoard.tiles[tile.value]!!
+//		println(tile)
+//		println(solvedTile)
+//		println(solvedTile.x == tile.x && solvedTile.y != tile.y)
+		return solvedTile.x == tile.x && solvedTile.y != tile.y
+	}
+
+	fun countLinearConflictsInColumn(column: Int): Int {
+		val tilesInRightColumnButWrongRow = board.map { it[column] }.count { isTileInRightColumnButWrongRow(tiles[it]!!) }
+		return if (tilesInRightColumnButWrongRow >= 2) {
+			tilesInRightColumnButWrongRow - 1
+		} else {
+			0
+		}
+	}
 
 	val canMoveEmptyTileUp
 		get() = emptyTile.y > 0
@@ -65,9 +109,6 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		}
 		println("----------------")
 	}
-
-	val isSolved
-		get() = board == solvedBoard.board
 
 	override fun equals(other: Any?): Boolean {
 		if (other is Board) {

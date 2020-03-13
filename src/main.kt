@@ -1,9 +1,9 @@
 import java.util.*
 
 const val INPUT =
-			"2 5 8\n" +
-			"7 0 3\n" +
-			"4 1 6\n"
+			"8 3 2\n" +
+			"7 5 0\n" +
+			"1 6 4\n"
 
 const val SIZE = 3
 
@@ -25,22 +25,24 @@ fun main() {
 	val startState = State(startBoard)
 	openList.add(startState)
 
-	while (openList.isNotEmpty()) {
-		val currentState = openList.poll()
+//	while (openList.isNotEmpty()) {
+//		val currentState = openList.poll()
+//
+//		if (currentState.board.isSolved) {
+//			pathIsFound(currentState)
+//			break
+//		}
+//		expandState(currentState)
+//		closedList.add(currentState)
+//	}
 
-		if (currentState.board.isSolved) {
-			pathIsFound(currentState)
-			break
-		}
-		expandState(currentState)
-		closedList.add(currentState)
-	}
+	println(startBoard.getLinearConflictsOnBoard())
 
 }
 
 fun pathIsFound(state: State) {
-	state.printTrace()
-	println("SOLVED")
+//	state.printTrace()
+//	println("SOLVED")
 }
 
 fun expandState(state: State) {

@@ -1,4 +1,3 @@
-import java.lang.Exception
 import kotlin.math.abs
 
 typealias TileMap = HashMap<Int, Tile>
@@ -11,6 +10,10 @@ class Tile private constructor(var x: Int, var y: Int, val value: Int) {
 
 	fun manhattanDistance(tile: Tile): Int {
 		return abs(x - tile.x) + abs(y - tile.y)
+	}
+
+	override fun toString(): String {
+		return "Value: $value, y: $y, x: $x"
 	}
 
 	companion object {
