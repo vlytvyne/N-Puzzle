@@ -1,11 +1,13 @@
 import java.util.*
 
 const val INPUT =
-			"1 2 3\n" +
-			"8 0 4\n" +
-			"7 6 5\n"
+			" 1 18  2  4  5\n" +
+			"17 15  3 19 20\n" +
+			" 0 23 24  7  6\n" +
+			"16 12 22 21  8\n" +
+			"14 13 11 10  9\n"
 
-const val SIZE = 3
+const val SIZE = 5
 
 val comparator = Comparator<State> {
 	state1, state2 ->
@@ -20,7 +22,7 @@ val closedList = arrayListOf<State>()
 
 fun main() {
 	Board.setBoardsSize(SIZE)
-	Board.setHeuristic(Heuristic.HAMMING)
+	Board.setHeuristic(Heuristic.LINEAR_CONFLICT)
 	val startBoard = Board.createBoard(INPUT)
 	solvePuzzle(startBoard)
 }

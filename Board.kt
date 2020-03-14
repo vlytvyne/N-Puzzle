@@ -108,11 +108,11 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 		private var size = 0
 		private var tilesAmount = 0
-		private var solvedBoard = Board(ArrayList<MutableList<Int>>().apply {
-			add(mutableListOf(1, 2, 3))
-			add(mutableListOf(8, 0, 4))
-			add(mutableListOf(7, 6, 5))
-		})
+		private var solvedBoard = createBoard(" 1  2  3  4  5\n" +
+				"16 17 18 19  6\n" +
+				"15 24  0 20  7\n" +
+				"14 23 22 21  8\n" +
+				"13 12 11 10  9\n")
 
 		var heuristicScoringFunc: Board.() -> Int = Board::getHeuristicHammingScore
 
