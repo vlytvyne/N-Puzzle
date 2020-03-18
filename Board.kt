@@ -10,18 +10,22 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		get() = board == solvedBoard.board
 
 	val heuristicScore
-		get() = heuristicScoringFunc()
+		get() = when (heuristic) {
+			Heuristic.HAMMING -> heuristicHammingScore
+			Heuristic.MANHATTAN -> heuristicManhattanScore
+			Heuristic.LINEAR_CONFLICT -> heuristicLinearConflictScore
+		}
 
-	fun getHeuristicHammingScore() =
-		tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
+	private val heuristicHammingScore
+		get() = tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
 
-	fun getHeuristicManhattanScore() =
-		tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
+	private val heuristicManhattanScore
+		get() = tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
 
-	fun getHeuristicLinearConflictScore() =
-		getHeuristicManhattanScore() + getLinearConflictsOnBoard() * 2
+	private val heuristicLinearConflictScore
+		get() = heuristicManhattanScore + getLinearConflictsOnBoard() * 2
 
-	private fun getLinearConflictsOnBoard() =
+	fun getLinearConflictsOnBoard() =
 		(0 until size).sumBy { countLinearConflictsInRow(it) + countLinearConflictsInColumn(it)}
 
 	private fun countLinearConflictsInRow(row: Int): Int {
@@ -107,24 +111,14 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	companion object {
 
 		private var size = 0
-		private var tilesAmount = 0
 
-		private var solvedBoard = Board(arrayListOf(
-			mutableListOf(1, 2, 3),
-			mutableListOf(8, 0, 4),
-			mutableListOf(7, 6, 5)
-		))
+		lateinit var solvedBoard: Board
 
-		var heuristicScoringFunc: Board.() -> Int = Board::getHeuristicHammingScore
+		var heuristic: Heuristic = Heuristic.HAMMING
 
 		fun setBoardsSize(size: Int) {
 			this.size = size
-			tilesAmount = size * size
-			//TODO: generate solved board
-		}
-
-		fun setHeuristic(heuristic: Heuristic) {
-			heuristicScoringFunc = heuristics[heuristic]!!
+			solvedBoard = Board(SolvedPuzzleGenerator(size).generate())
 		}
 
 		fun createBoard(rows: ArrayList<String>): Board {
@@ -145,12 +139,6 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			return Board(board)
 		}
 	}
-}
-
-private val heuristics = HashMap<Heuristic, Board.() -> Int>().apply {
-	put(Heuristic.HAMMING, Board::getHeuristicHammingScore)
-	put(Heuristic.MANHATTAN, Board::getHeuristicManhattanScore)
-	put(Heuristic.LINEAR_CONFLICT, Board::getHeuristicLinearConflictScore)
 }
 
 enum class Heuristic {
