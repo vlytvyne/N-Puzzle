@@ -108,11 +108,12 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 		private var size = 0
 		private var tilesAmount = 0
-		private var solvedBoard = createBoard(" 1  2  3  4  5\n" +
-				"16 17 18 19  6\n" +
-				"15 24  0 20  7\n" +
-				"14 23 22 21  8\n" +
-				"13 12 11 10  9\n")
+
+		private var solvedBoard = Board(arrayListOf(
+			mutableListOf(1, 2, 3),
+			mutableListOf(8, 0, 4),
+			mutableListOf(7, 6, 5)
+		))
 
 		var heuristicScoringFunc: Board.() -> Int = Board::getHeuristicHammingScore
 
@@ -126,10 +127,21 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			heuristicScoringFunc = heuristics[heuristic]!!
 		}
 
-		fun createBoard(input: String): Board {
+		fun createBoard(rows: ArrayList<String>): Board {
 			val board = ArrayList<MutableList<Int>>()
-			val rows = input.split("\n").dropLast(1);
-			rows.forEach { row -> board.add(row.split("\\s+".toRegex()).filter { it != "" }.map { it.toInt() } as MutableList<Int>) }
+			validate("Invalid n-puzzle format") {
+				rows.forEach { row -> board.add(row.split("\\s+".toRegex()).filter { it != "" }.map { it.toInt() } as MutableList<Int>) }
+			}
+			if (board.size != size) {
+				invalidExit("Invalid n-puzzle size")
+			}
+			if (board.any { row -> row.size != size }) {
+				invalidExit("Invalid n-puzzle size")
+			}
+			val distinctTilesAmount = board.flatMap { it.toList() }.distinct().size
+			if (distinctTilesAmount != size * size) {
+				invalidExit("N-puzzle has tiles duplicates")
+			}
 			return Board(board)
 		}
 	}
