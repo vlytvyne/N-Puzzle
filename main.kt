@@ -23,14 +23,18 @@ fun main() {
 	Board.heuristic = Heuristic.MANHATTAN
 	val startBoard = parseInput()
 	startBoard.print()
+	if (!startBoard.isSolvable) {
+		invalidExit("This puzzle is unsolvable")
+	}
 	val time = measureTimeMillis { solvePuzzle(startBoard) }
 	println("SOLVED".fontColor(GREEN))
-	println("time: $time".fontColor(RED))
+	println("time: $time ms".fontColor(RED))
 	println("time complexity: $timeComplexity")
 	println("size complexity: $sizeComplexity")
 	println("type: ${Board.heuristic}".fontColor(MAGENTA))
 }
 
+//https://uk.wikipedia.org/wiki/%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D0%BF%D0%BE%D1%88%D1%83%D0%BA%D1%83_A*
 fun solvePuzzle(startBoard: Board) {
 	val startState = State(startBoard)
 	openList.add(startState)

@@ -9,6 +9,7 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	val isSolved
 		get() = board == solvedBoard.board
 
+	//https://algorithmsinsight.wordpress.com/graph-theory-2/a-star-in-general/implementing-a-star-to-solve-n-puzzle/
 	val heuristicScore
 		get() = when (heuristic) {
 			Heuristic.HAMMING -> heuristicHammingScore
@@ -31,11 +32,11 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	private fun countLinearConflictsInRow(row: Int): Int {
 		val tilesInGoalRow = board[row].filter { it != EMPTY_TILE }.map { tiles[it]!! }.filter { isTileInGoalRow(it) }
 
-		var conflicts = 0
-		for (leftTile in 0 until tilesInGoalRow.size)
-			for (rightTile in leftTile + 1 until tilesInGoalRow.size)
-				if (tilesHaveLinearRowConflict(tilesInGoalRow[leftTile], tilesInGoalRow[rightTile]))
-					conflicts++
+		val conflicts = tilesInGoalRow.indices.sumBy {
+				leftTile -> (leftTile + 1 until tilesInGoalRow.size).count {
+				rightTile -> tilesHaveLinearRowConflict(tilesInGoalRow[leftTile], tilesInGoalRow[rightTile])
+			}
+		}
 		return conflicts
 	}
 
@@ -51,11 +52,12 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 	private fun countLinearConflictsInColumn(column: Int): Int {
 		val tilesInGoalColumn = board.map { it[column] }.filter { it != EMPTY_TILE }.map { tiles[it]!! }.filter { isTileInGoalColumn(it) }
-		var conflicts = 0
-		for (topTile in 0 until tilesInGoalColumn.size)
-			for (bottomTile in topTile + 1 until tilesInGoalColumn.size)
-				if (tilesHaveLinearColumnConflict(tilesInGoalColumn[topTile], tilesInGoalColumn[bottomTile]))
-					conflicts++
+
+		val conflicts = tilesInGoalColumn.indices.sumBy {
+				topTile -> (topTile + 1 until tilesInGoalColumn.size).count {
+				bottomTile -> tilesHaveLinearColumnConflict(tilesInGoalColumn[topTile], tilesInGoalColumn[bottomTile])
+			}
+		}
 		return conflicts
 	}
 
@@ -133,17 +135,49 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		return board.hashCode()
 	}
 
+	//https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+	val isSolvable: Boolean
+		get() {
+			val tilesInUsualOrder = board.flatMap { it.toList() }.filter { it != EMPTY_TILE }.map { usualTilesPositions[it]!! }
+			val inversions = countInversions(tilesInUsualOrder)
+			return if (size.isEven) {
+				isEvenWidthBoardSolvable(inversions)
+			} else {
+				isOddWidthBoardSolvable(inversions)
+			}
+		}
+
+	private fun countInversions(tilesInUsualOrder: List<Int>) =
+		tilesInUsualOrder.indices.sumBy {
+				leftTile -> (leftTile + 1 until tilesInUsualOrder.size).count {
+				rightTile -> tilesInUsualOrder[leftTile] > tilesInUsualOrder[rightTile]
+			}
+		}
+
+	private fun isEvenWidthBoardSolvable(inversions: Int): Boolean {
+		val emptyTileInSolvedBoardIsOddFromBottom = size % 4 != 0
+		return if (emptyTileInSolvedBoardIsOddFromBottom) {
+			if (emptyTile.y.isEven) inversions.isOdd else inversions.isEven
+		} else {
+			if (emptyTile.y.isEven) inversions.isEven else inversions.isOdd
+		}
+	}
+
+	private fun isOddWidthBoardSolvable(inversions: Int) = inversions.isEven
+
 	companion object {
 
 		private var size = 0
 
-		lateinit var solvedBoard: Board
+		private lateinit var solvedBoard: Board
+		private val usualTilesPositions = HashMap<Int, Int>()
 
 		var heuristic: Heuristic = Heuristic.HAMMING
 
 		fun setBoardsSize(size: Int) {
 			this.size = size
 			solvedBoard = Board(SolvedPuzzleGenerator(size).generate())
+			solvedBoard.board.flatMap { it.toList() }.forEachIndexed { index, tile -> usualTilesPositions[tile] = index }
 		}
 
 		fun createBoard(rows: ArrayList<String>): Board {

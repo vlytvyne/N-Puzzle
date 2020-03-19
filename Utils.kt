@@ -5,12 +5,17 @@ fun validate(errorMsg: String, runnable: () -> Unit) {
 	try {
 		runnable()
 	} catch (e: Exception) {
-		println(errorMsg)
-		exitProcess(1)
+		invalidExit(errorMsg)
 	}
 }
 
 fun invalidExit(errorMsg: String) {
-	println(errorMsg)
+	println(errorMsg.fontColor(AnsiColor.RED))
 	exitProcess(1)
 }
+
+val Int.isEven: Boolean
+	get() = this % 2 == 0
+
+val Int.isOdd: Boolean
+	get() = this % 2 != 0
