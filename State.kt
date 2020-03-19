@@ -29,13 +29,6 @@ class State(val board: Board) {
 		return state
 	}
 
-	override fun equals(other: Any?): Boolean {
-		if (other is State) {
-			return board == other.board
-		}
-		return false
-	}
-
 	fun print() {
 		println("g: $g, h: $h, f: $f")
 		board.print()
@@ -52,5 +45,16 @@ class State(val board: Board) {
 
 		trace.reverse()
 		trace.forEach { it.print() }
+	}
+
+	override fun equals(other: Any?): Boolean {
+		if (other is State) {
+			return board == other.board
+		}
+		return false
+	}
+
+	override fun hashCode(): Int {
+		return board.hashCode()
 	}
 }

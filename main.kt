@@ -1,7 +1,9 @@
 import java.io.FileInputStream
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.system.exitProcess
+import kotlin.math.max
+import kotlin.system.measureTimeMillis
+import AnsiColor.*
 
 val comparator = Comparator<State> {
 	state1, state2 ->
@@ -14,11 +16,19 @@ val comparator = Comparator<State> {
 val openList = PriorityQueue<State>(comparator)
 val closedList = arrayListOf<State>()
 
+var timeComplexity: Long = 0
+var sizeComplexity: Long = 0
+
 fun main() {
 	Board.heuristic = Heuristic.MANHATTAN
 	val startBoard = parseInput()
 	startBoard.print()
-	solvePuzzle(startBoard)
+	val time = measureTimeMillis { solvePuzzle(startBoard) }
+	println("SOLVED".fontColor(GREEN))
+	println("time: $time".fontColor(RED))
+	println("time complexity: $timeComplexity")
+	println("size complexity: $sizeComplexity")
+	println("type: ${Board.heuristic}".fontColor(MAGENTA))
 }
 
 fun solvePuzzle(startBoard: Board) {
@@ -26,22 +36,17 @@ fun solvePuzzle(startBoard: Board) {
 	openList.add(startState)
 
 	while (openList.isNotEmpty()) {
+		sizeComplexity = max(sizeComplexity, (openList.size + closedList.size).toLong())
+		timeComplexity++
 		val currentState = openList.poll()
 
 		if (currentState.board.isSolved) {
-			pathIsFound(currentState)
+			currentState.printTrace()
 			break
 		}
 		expandState(currentState)
 		closedList.add(currentState)
 	}
-	println("Path can\'t be found")
-}
-
-fun pathIsFound(state: State) {
-	state.printTrace()
-	println("SOLVED")
-	exitProcess(0)
 }
 
 fun expandState(state: State) {

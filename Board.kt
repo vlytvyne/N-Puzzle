@@ -17,35 +17,56 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		}
 
 	private val heuristicHammingScore
-		get() = tiles.values.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
+		get() = tiles.values.filter { it != emptyTile }.count { tile -> !tile.isOnSamePlace(solvedBoard.tiles[tile.value]!!) }
 
 	private val heuristicManhattanScore
-		get() = tiles.values.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
+		get() = tiles.values.filter { it != emptyTile }.sumBy { tile -> tile.manhattanDistance(solvedBoard.tiles[tile.value]!!) }
 
 	private val heuristicLinearConflictScore
 		get() = heuristicManhattanScore + getLinearConflictsOnBoard() * 2
 
-	fun getLinearConflictsOnBoard() =
+	private fun getLinearConflictsOnBoard() =
 		(0 until size).sumBy { countLinearConflictsInRow(it) + countLinearConflictsInColumn(it)}
 
 	private fun countLinearConflictsInRow(row: Int): Int {
-		val tilesInRightRowButWrongColumn = board[row].count { isTileInRightRowButWrongColumn(tiles[it]!!) }
-		return if (tilesInRightRowButWrongColumn >= 2) tilesInRightRowButWrongColumn - 1 else 0
+		val tilesInGoalRow = board[row].filter { it != EMPTY_TILE }.map { tiles[it]!! }.filter { isTileInGoalRow(it) }
+
+		var conflicts = 0
+		for (leftTile in 0 until tilesInGoalRow.size)
+			for (rightTile in leftTile + 1 until tilesInGoalRow.size)
+				if (tilesHaveLinearRowConflict(tilesInGoalRow[leftTile], tilesInGoalRow[rightTile]))
+					conflicts++
+		return conflicts
 	}
 
-	private fun isTileInRightRowButWrongColumn(tile: Tile): Boolean {
+	private fun isTileInGoalRow(tile: Tile): Boolean {
 		val solvedTile = solvedBoard.tiles[tile.value]!!
-		return solvedTile.y == tile.y && solvedTile.x != tile.x
+		return solvedTile.y == tile.y
+	}
+
+	private fun tilesHaveLinearRowConflict(leftTile: Tile, rightTile: Tile): Boolean {
+		val solvedLeftTile = solvedBoard.tiles[leftTile.value]!!
+		return solvedLeftTile.x >= rightTile.x
 	}
 
 	private fun countLinearConflictsInColumn(column: Int): Int {
-		val tilesInRightColumnButWrongRow = board.map { it[column] }.count { isTileInRightColumnButWrongRow(tiles[it]!!) }
-		return if (tilesInRightColumnButWrongRow >= 2) tilesInRightColumnButWrongRow - 1 else 0
+		val tilesInGoalColumn = board.map { it[column] }.filter { it != EMPTY_TILE }.map { tiles[it]!! }.filter { isTileInGoalColumn(it) }
+		var conflicts = 0
+		for (topTile in 0 until tilesInGoalColumn.size)
+			for (bottomTile in topTile + 1 until tilesInGoalColumn.size)
+				if (tilesHaveLinearColumnConflict(tilesInGoalColumn[topTile], tilesInGoalColumn[bottomTile]))
+					conflicts++
+		return conflicts
 	}
 
-	private fun isTileInRightColumnButWrongRow(tile: Tile): Boolean {
+	private fun isTileInGoalColumn(tile: Tile): Boolean {
 		val solvedTile = solvedBoard.tiles[tile.value]!!
-		return solvedTile.x == tile.x && solvedTile.y != tile.y
+		return solvedTile.x == tile.x
+	}
+
+	private fun tilesHaveLinearColumnConflict(topTile: Tile, bottomTile: Tile): Boolean {
+		val solvedTopTile = solvedBoard.tiles[topTile.value]!!
+		return solvedTopTile.y >= bottomTile.y
 	}
 
 	val canMoveEmptyTileUp
@@ -108,6 +129,10 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		return false
 	}
 
+	override fun hashCode(): Int {
+		return board.hashCode()
+	}
+
 	companion object {
 
 		private var size = 0
@@ -126,15 +151,11 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			validate("Invalid n-puzzle format") {
 				rows.forEach { row -> board.add(row.split("\\s+".toRegex()).filter { it != "" }.map { it.toInt() } as MutableList<Int>) }
 			}
-			if (board.size != size) {
-				invalidExit("Invalid n-puzzle size")
-			}
-			if (board.any { row -> row.size != size }) {
-				invalidExit("Invalid n-puzzle size")
-			}
 			val distinctTilesAmount = board.flatMap { it.toList() }.distinct().size
-			if (distinctTilesAmount != size * size) {
-				invalidExit("N-puzzle has tiles duplicates")
+			when {
+				board.size != size -> invalidExit("Invalid n-puzzle size")
+				board.any { row -> row.size != size } -> invalidExit("Invalid n-puzzle size")
+				distinctTilesAmount != size * size -> invalidExit("N-puzzle has tiles duplicates")
 			}
 			return Board(board)
 		}
