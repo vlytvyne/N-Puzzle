@@ -71,6 +71,8 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		return solvedTopTile.y >= bottomTile.y
 	}
 
+	var lastEmptyTileMove: TileMove? = null
+
 	val canMoveEmptyTileUp
 		get() = emptyTile.y > 0
 
@@ -84,24 +86,28 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 		get() = emptyTile.x < size - 1
 
 	fun moveEmptyTileUp() {
+		lastEmptyTileMove = TileMove.UP
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y - 1][emptyTile.x]
 		board[emptyTile.y - 1][emptyTile.x] = EMPTY_TILE
 		emptyTile.y--
 	}
 
 	fun moveEmptyTileDown() {
+		lastEmptyTileMove = TileMove.DOWN
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y + 1][emptyTile.x]
 		board[emptyTile.y + 1][emptyTile.x] = EMPTY_TILE
 		emptyTile.y++
 	}
 
 	fun moveEmptyTileLeft() {
+		lastEmptyTileMove = TileMove.LEFT
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y][emptyTile.x - 1]
 		board[emptyTile.y][emptyTile.x - 1] = EMPTY_TILE
 		emptyTile.x--
 	}
 
 	fun moveEmptyTileRight() {
+		lastEmptyTileMove = TileMove.RIGHT
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y][emptyTile.x + 1]
 		board[emptyTile.y][emptyTile.x + 1] = EMPTY_TILE
 		emptyTile.x++
@@ -114,14 +120,24 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	}
 
 	fun print() {
-		println("----------------")
+		val lastMoveInfo = when (lastEmptyTileMove) {
+			TileMove.UP -> "⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆"
+			TileMove.DOWN -> "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇"
+			TileMove.LEFT -> "⬅⬅⬅⬅⬅⬅⬅⬅⬅⬅"
+			TileMove.RIGHT -> "⮕⮕⮕⮕⮕⮕⮕⮕⮕⮕"
+			null -> "--- START ---"
+		}
+		println(lastMoveInfo)
 		for(row in board) {
 			for (tile in row) {
-				print(" $tile")
+				if (tile == EMPTY_TILE) {
+					print("%3d ".format(tile).fontColor(AnsiColor.BLUE))
+				} else {
+					print("%3d ".format(tile))
+				}
 			}
 			println()
 		}
-		println("----------------")
 	}
 
 	override fun equals(other: Any?): Boolean {
@@ -182,8 +198,10 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 		fun createBoard(rows: ArrayList<String>): Board {
 			val board = ArrayList<MutableList<Int>>()
-			validate("Invalid n-puzzle format") {
+			try {
 				rows.forEach { row -> board.add(row.split("\\s+".toRegex()).filter { it != "" }.map { it.toInt() } as MutableList<Int>) }
+			} catch (e: Exception) {
+				invalidExit("Invalid n-puzzle format")
 			}
 			val distinctTilesAmount = board.flatMap { it.toList() }.distinct().size
 			when {
@@ -200,4 +218,11 @@ enum class Heuristic {
 	HAMMING,
 	MANHATTAN,
 	LINEAR_CONFLICT
+}
+
+enum class TileMove {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT
 }

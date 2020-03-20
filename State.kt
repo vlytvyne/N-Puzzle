@@ -30,7 +30,7 @@ class State(val board: Board) {
 	}
 
 	fun print() {
-		println("g: $g, h: $h, f: $f")
+//		println("g: $g, h: $h, f: $f")
 		board.print()
 	}
 
