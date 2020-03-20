@@ -1,0 +1,7 @@
+kotlinc *.kt -include-runtime -d program.jar
+
+java -jar program.jar
+
+python res_npuzzle-gen.py 3 -i 10 -s | java -jar program.jar
+
+java -jar program.jar < input.txt

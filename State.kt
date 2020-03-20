@@ -1,11 +1,12 @@
 
-class State(val board: Board) {
+class State(private val board: Board, private val parent: State? = null) {
 
-	var g = 0
-	var h = 0
-	var f = 0
+	val g: Int = if (parent == null) 0 else parent.g + 1
+	var h = board.heuristicScore
+	var f = g + h
 
-	private var parent: State? = null
+	val isSolved
+		get() = board.isSolved
 
 	fun getNeighbourStates(): ArrayList<State> {
 		val states = ArrayList<State>()
@@ -21,17 +22,32 @@ class State(val board: Board) {
 	private fun generateNeighbourState(moveFunc: Board.() -> Unit): State {
 		val newBoard = board.copy()
 		newBoard.moveFunc()
-		val state = State(newBoard)
-		state.g = g + 1
-		state.h = newBoard.heuristicScore
-		state.f = state.g + state.h
-		state.parent = this
-		return state
+		return State(newBoard, this)
 	}
 
 	fun print() {
-//		println("g: $g, h: $h, f: $f")
+		if (CommandLineConfig.verboseOutput) {
+			printVerboseInfo()
+		} else {
+			println("---------------------".fontColor(AnsiColor.BLUE))
+		}
 		board.print()
+	}
+
+	private fun printVerboseInfo() {
+		val lastMoveInfo = when (board.lastEmptyTileMove) {
+			TileMove.UP -> "⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆"
+			TileMove.DOWN -> "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇"
+			TileMove.LEFT -> "⬅⬅⬅⬅⬅⬅⬅⬅⬅⬅"
+			TileMove.RIGHT -> "⮕⮕⮕⮕⮕⮕⮕⮕⮕⮕"
+			null -> "    --- START ---"
+		}
+		println("---------------------".fontColor(AnsiColor.MAGENTA))
+		println(lastMoveInfo)
+		println("---------------------".fontColor(AnsiColor.MAGENTA))
+		println("---------------------".fontColor(AnsiColor.BLUE))
+		println("g: $g, h: $h, f: $f")
+		println("---------------------".fontColor(AnsiColor.BLUE))
 	}
 
 	fun printTrace() {

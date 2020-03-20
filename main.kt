@@ -22,8 +22,13 @@ private var sizeComplexity: Long = 0
 private var turns = 0
 private var time: Long = 0
 
-fun main() {
-	Board.heuristic = Heuristic.MANHATTAN
+fun main(args: Array<String>) {
+	CommandLineConfig.parseCommandLineArguments(args)
+
+	if (CommandLineConfig.helpCalled) {
+		showHelp()
+	}
+	Board.heuristic = CommandLineConfig.heuristic
 	val startBoard = parseInput()
 	if (!startBoard.isSolvable) {
 		invalidExit("This puzzle is unsolvable")
@@ -42,7 +47,7 @@ fun solvePuzzle(startBoard: Board) {
 		timeComplexity++
 		val currentState = openList.poll()
 
-		if (currentState.board.isSolved) {
+		if (currentState.isSolved) {
 			currentState.printTrace()
 			turns = currentState.g
 			break
@@ -59,8 +64,6 @@ private fun expandState(state: State) {
 }
 
 private fun parseInput(): Board {
-	System.setIn(FileInputStream("src/input.txt"))
-
 	val scanner = Scanner(System.`in`)
 	var size: Int? = null
 	val boardLines = ArrayList<String>()
@@ -80,7 +83,11 @@ private fun parseInput(): Board {
 			boardLines.add(line)
 		}
 	}
-	Board.setBoardsSize(size!!)
+	if (size != null) {
+		Board.setBoardsSize(size)
+	} else {
+		invalidExit("Input is invalid")
+	}
 	return Board.createBoard(boardLines)
 }
 
@@ -102,7 +109,7 @@ private fun eraseComment(line: String): String {
 }
 
 private fun printSolveDetails() {
-	println()
+	println("---------------------".fontColor(BLUE))
 	println("SOLVED".fontColor(GREEN))
 	println("turns: $turns".fontColor(BLUE))
 	println("time: $time ms".fontColor(RED))

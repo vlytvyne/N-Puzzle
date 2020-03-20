@@ -87,30 +87,42 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 
 	fun moveEmptyTileUp() {
 		lastEmptyTileMove = TileMove.UP
-		board[emptyTile.y][emptyTile.x] = board[emptyTile.y - 1][emptyTile.x]
+
+		val tileToReplace = board[emptyTile.y - 1][emptyTile.x]
+		board[emptyTile.y][emptyTile.x] = tileToReplace
 		board[emptyTile.y - 1][emptyTile.x] = EMPTY_TILE
 		emptyTile.y--
+		tiles[tileToReplace]!!.y++
 	}
 
 	fun moveEmptyTileDown() {
 		lastEmptyTileMove = TileMove.DOWN
+
+		val tileToReplace = board[emptyTile.y + 1][emptyTile.x]
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y + 1][emptyTile.x]
 		board[emptyTile.y + 1][emptyTile.x] = EMPTY_TILE
 		emptyTile.y++
+		tiles[tileToReplace]!!.y--
 	}
 
 	fun moveEmptyTileLeft() {
 		lastEmptyTileMove = TileMove.LEFT
+
+		val tileToReplace = board[emptyTile.y][emptyTile.x - 1]
 		board[emptyTile.y][emptyTile.x] = board[emptyTile.y][emptyTile.x - 1]
 		board[emptyTile.y][emptyTile.x - 1] = EMPTY_TILE
 		emptyTile.x--
+		tiles[tileToReplace]!!.x++
 	}
 
 	fun moveEmptyTileRight() {
 		lastEmptyTileMove = TileMove.RIGHT
-		board[emptyTile.y][emptyTile.x] = board[emptyTile.y][emptyTile.x + 1]
+
+		val tileToReplace = board[emptyTile.y][emptyTile.x + 1]
+		board[emptyTile.y][emptyTile.x] = tileToReplace
 		board[emptyTile.y][emptyTile.x + 1] = EMPTY_TILE
 		emptyTile.x++
+		tiles[tileToReplace]!!.x--
 	}
 
 	fun copy(): Board {
@@ -120,14 +132,6 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 	}
 
 	fun print() {
-		val lastMoveInfo = when (lastEmptyTileMove) {
-			TileMove.UP -> "⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆"
-			TileMove.DOWN -> "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇"
-			TileMove.LEFT -> "⬅⬅⬅⬅⬅⬅⬅⬅⬅⬅"
-			TileMove.RIGHT -> "⮕⮕⮕⮕⮕⮕⮕⮕⮕⮕"
-			null -> "--- START ---"
-		}
-		println(lastMoveInfo)
 		for(row in board) {
 			for (tile in row) {
 				if (tile == EMPTY_TILE) {
@@ -203,11 +207,13 @@ class Board private constructor(private val board: ArrayList<MutableList<Int>>) 
 			} catch (e: Exception) {
 				invalidExit("Invalid n-puzzle format")
 			}
-			val distinctTilesAmount = board.flatMap { it.toList() }.distinct().size
+			val allTiles = board.flatMap { it.toList() }
+			val distinctTiles = allTiles.distinct()
 			when {
 				board.size != size -> invalidExit("Invalid n-puzzle size")
 				board.any { row -> row.size != size } -> invalidExit("Invalid n-puzzle size")
-				distinctTilesAmount != size * size -> invalidExit("N-puzzle has tiles duplicates")
+				distinctTiles.size != size * size -> invalidExit("N-puzzle has tiles duplicates")
+				allTiles.any { !solvedBoard.tiles.containsKey(it) } -> invalidExit("Invalid tiles")
 			}
 			return Board(board)
 		}
